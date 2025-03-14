@@ -1,0 +1,9 @@
+# runLDAfromDF
+
+作用：配置菜单式对含有以空格分割的文本信息字段的pandas.DataFrame的指定字段构建bow或tf-idf特征提取，并在指定的主题数区间运行LatentDirichletAllocation，根据困惑度找出最优主题数，返回加入最可能属于的主题编号字段的DataFrame和组内最经常出现的24个词语的xlsx表单。配置菜单的基本格式见app.py。
+
+优点：存档点可以将任务根据占用的内存大小切分为多个小任务并在每组小任务完成后立即保存到硬盘实现断点续运行。
+
+特点：使用多进程最大限度利用现代计算机的多核性能（相较于简单的使用for-loop遍历观测并顺序操作），使用pickle格式存储中间过程以减少过程内存占用并实现存档点功能。
+
+其他：有任何的bug或改进意见都欢迎在issue中提出（当然也欢迎通过nexus_yang@126.com邮件私发给我），会持续改进；requirements.txt仅供参考，应该numpy和pandas任何版本都行吧，scikit-learn的版本应大于0.19否则api的名称无法匹配。
