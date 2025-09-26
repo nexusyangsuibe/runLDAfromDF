@@ -2,7 +2,7 @@
 
 from collections.abc import Iterable
 from hashlib import sha256
-import multiprocess as mp
+import multiprocessing as mp
 from pathlib import Path
 from io import StringIO
 import pickle
