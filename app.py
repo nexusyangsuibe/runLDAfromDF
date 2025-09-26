@@ -4,7 +4,7 @@ import time
 if __name__=="__main__":
 
     # LDA配置文件
-    word_tokenize_cfg={
+    lda_cfg={
         "runtime_code":"cyj", # 运行时代码，必选项，用于区分不同的运行时，用于输出文件名的开头，应该是字符串格式
         "input_file":"example_output_wt.pkl", # 输入文件，必选项，应该是一个pandas.DataFrame或内容是一个DataFrame的pickle文件的路径名
         "tokenized_column_name":"NewsContentTokenized", # 分词结果的列的列名，必选项，应该是字符串格式，内容应该是以空格分隔的token
@@ -20,6 +20,6 @@ if __name__=="__main__":
 
     print("程序运行开始\n")
     t0=time.time()
-    rtn_wt=runLDAfromDFusingConfigMenu(config_menu=word_tokenize_cfg)
-    print(rtn_wt.head(10))
+    rtn_lda=runLDAfromDFusingConfigMenu(config_menu=lda_cfg)
+    print(rtn_lda.head(10))
     print(f"\n程序运行完成，用时{(time.time()-t0):.4f}秒")
