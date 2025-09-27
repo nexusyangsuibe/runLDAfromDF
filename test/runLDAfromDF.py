@@ -195,6 +195,7 @@ def runLDAfromDF(runtime_code,input_file,tokenized_column_name,text_feature_extr
         if not finished_num_topics or input(f"您输入的参数{clear_respawnpoint_before_run=}要求在运行前删去respawnpoint文件夹中的所有内容，但程序在该文件夹中检测到已经完成运行的主题数{finished_num_topics=}，若按计划删去respawnpoint文件夹中的所有内容则已完成分词部分的区间记录将被删除且无法恢复，即程序将完全从头开始重新分词而不是继续已经完成的部分，输入y确认，输入其他任意字符取消清空respawnpoint文件夹：").lower()=="y":
             for file in os.listdir("respawnpoint/"):
                 os.remove("respawnpoint/"+file)
+            finished_num_topics=[]
     # continue to process the DataFrame
     index_name=input_file.index.name # save the index name to restore it after reset the index
     if not index_name:
@@ -209,7 +210,6 @@ def runLDAfromDF(runtime_code,input_file,tokenized_column_name,text_feature_extr
     if type(tokenized_column_name)!=str or tokenized_column_name not in input_file.columns:
         raise ValueError(f"输入的tokenized_column必须是字符串类型且存在于输入文件的列名中，当前指定的{tokenized_column_name=}，而输入文件的列名为{input_file.columns=}")
     input_file=input_file[tokenized_column_name]
-    memory_usage_GB=input_file.memory_usage(deep=True)/1024**3
     text_features=vectorizer.fit_transform(input_file)
     ergodicRange=list(range(start_num_topic,end_num_topic+1,num_topic_step))
     if finished_num_topics:
@@ -217,7 +217,7 @@ def runLDAfromDF(runtime_code,input_file,tokenized_column_name,text_feature_extr
     else:
         unfinished_num_topics=ergodicRange
     if unfinished_num_topics:
-        n_jobs_beg=int(os.cpu_count()/(unfinished_num_topics[0]/10/memory_usage_GB)) # this formula is just a rule of thumb for personal pc modified for big data research use with about 0.5 cpu_kernel/memory_size it sounds a good idea to get the cpu kernel amounts and memory size at the same time and use a function(cpu_count,memory_size,file_size) to determine the processors used and the batch size, but it may encounter some problems with authority
+        n_jobs_beg=int(os.cpu_count()*0.8)
         if n_jobs_beg<2:
             n_jobs_beg=2
     for unfinished_num_topic in unfinished_num_topics:
