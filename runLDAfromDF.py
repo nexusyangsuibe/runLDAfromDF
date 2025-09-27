@@ -18,21 +18,26 @@ from sklearn.feature_extraction.text import CountVectorizer,TfidfVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
 
 # common tool functions are as follows
-def ensureDFCorrectPklDump(df,filepath):
-    # ensure that Dataframe are correctly write into pickle file
+def ensureCorrectPklDump(obj,filepath):
+    # ensure that objects written into pickle files can be read normally to avoid corrupted writing
+    fail=0
     path=Path(filepath)
     pathname=path.parent
     filename=path.name
-    pickle.dump(df, open(pathname/f"tmp_{filename}", "wb"))
+    pickle.dump(obj,open(pathname/f"tmp_{filename}", "wb"))
     while True:
-        saved_df=pickle.load(open(pathname/f"tmp_{filename}","rb"))
-        if saved_df.equals(df):
-            if os.path.exists(path):
-                os.remove(path)
-            os.rename(pathname/f"tmp_{filename}",path)
-            return None
-        else:
-            pickle.dump(df, open(pathname/f"tmp_{filename}", "wb"))
+        if fail>2:
+            raise RuntimeError(f"写入pickle文件已经失败了{fail}次，请检查写入对象的完整性")
+        try:
+            pickle.load(open(pathname/f"tmp_{filename}","rb"))
+            break
+        except:
+            fail+=1
+            pickle.dump(obj,open(pathname/f"tmp_{filename}","wb"))
+    if os.path.exists(path):
+        os.remove(path)
+    os.rename(pathname/f"tmp_{filename}",path)
+    return None
 
 def findBestBulkNum(df,thereshold_GB,best_bulk_num=1):
     # find the best bulk number that meets the demand that all bulks smaller than thereshold_GB
@@ -95,11 +100,11 @@ def outputAsXlsx(df,output_filename,output_pathname,thereshold_rows=1000000,ther
 def saveConcatedDataAsFinalResult(runtime_code,concatedDF,output_filename,clear_respawnpoint_upon_conplete):
     # the end process of the concatDF, including writing the final result to the disk and clear the respawnpoint folder
     if not clear_respawnpoint_upon_conplete or not output_filename:
-        ensureDFCorrectPklDump(concatedDF,f"respawnpoint/{runtime_code}_word_tokenized.pkl")
+        ensureCorrectPklDump(concatedDF,f"respawnpoint/{runtime_code}_word_tokenized.pkl")
     if output_filename:
         print("开始将最终结果写入硬盘")
         if output_filename.endswith(".pkl"):
-            ensureDFCorrectPklDump(concatedDF,f"finalresults/{output_filename}")
+            ensureCorrectPklDump(concatedDF,f"finalresults/{output_filename}")
         elif output_filename.endswith(".xlsx"):
             outputAsXlsx(concatedDF,output_filename,"finalresults")
         elif output_filename.endswith(".csv"):
@@ -148,7 +153,7 @@ def run_lda_once(runtime_code,num_topic,text_features,df_identity_code,tokenized
     lda=LatentDirichletAllocation(n_components=num_topic,learning_method="batch",max_iter=24,max_doc_update_iter=240,n_jobs=n_jobs) # I want to add an option to use 'online' learning method, but it me encounter some weird mistakes like fail to pickle so I forgive it
     lda_dtf=lda.fit_transform(text_features)
     perplexity=int(lda.bound_)
-    ensureDFCorrectPklDump(tuple([lda,lda_dtf]),f"respawnpoint/{runtime_code}_lda_{num_topic}_{perplexity}_{df_identity_code}_{tokenized_column_name}_{text_feature_extractor}.pkl")
+    ensureCorrectPklDump(tuple([lda,lda_dtf]),f"respawnpoint/{runtime_code}_lda_{num_topic}_{perplexity}_{df_identity_code}_{tokenized_column_name}_{text_feature_extractor}.pkl")
     return perplexity
 
 def runLDAfromDF(runtime_code,input_file,tokenized_column_name,text_feature_extractor,start_num_topic,end_num_topic,num_topic_step,output_filename,clear_respawnpoint_before_run,clear_respawnpoint_upon_conplete):
@@ -200,7 +205,7 @@ def runLDAfromDF(runtime_code,input_file,tokenized_column_name,text_feature_extr
         input_file.index.name=new_index_name
         index_name=new_index_name
     input_file=input_file.reset_index() # reset the index to default increasing primary key to ensure that the index is unique
-    ensureDFCorrectPklDump(input_file,f"respawnpoint/{runtime_code}_input_dataframe_backup.pkl")
+    ensureCorrectPklDump(input_file,f"respawnpoint/{runtime_code}_input_dataframe_backup.pkl")
     if type(tokenized_column_name)!=str or tokenized_column_name not in input_file.columns:
         raise ValueError(f"输入的tokenized_column必须是字符串类型且存在于输入文件的列名中，当前指定的{tokenized_column_name=}，而输入文件的列名为{input_file.columns=}")
     input_file=input_file[tokenized_column_name]
