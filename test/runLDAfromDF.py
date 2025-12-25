@@ -34,9 +34,7 @@ def ensureCorrectPklDump(obj,filepath):
         except:
             fail+=1
             pickle.dump(obj,open(pathname/f"tmp_{filename}","wb"))
-    if os.path.exists(path):
-        os.remove(path)
-    os.rename(pathname/f"tmp_{filename}",path)
+    os.replace(pathname/f"tmp_{filename}",path)
     return None
 
 def findBestBulkNum(df,thereshold_GB,best_bulk_num=1):
